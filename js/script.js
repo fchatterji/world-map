@@ -3,7 +3,6 @@ var map;
 var markers = [];
 
 
-
 // These are the locations that will be shown to the user.
 var locations = [
     { title: 'France', location: { lat: 48.854763, lng: 2.347256 } },
@@ -32,7 +31,7 @@ function initMap() {
 function initMarkers() {
     // Initialize all markers and add event listener
 
-    var largeInfowindow = new google.maps.InfoWindow();
+
     var bounds = new google.maps.LatLngBounds();
 
     // The following group uses the location array to create an array of markers on initialize.
@@ -57,7 +56,7 @@ function initMarkers() {
         markers.push(marker);
         // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
-            populateInfoWindow(this, largeInfowindow);
+            creatInfoWindow(this);
             toggleBounce(this);
         });
         bounds.extend(markers[i].position);
@@ -70,7 +69,9 @@ function initMarkers() {
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
 // on that markers position.
-function populateInfoWindow(marker, infowindow) {
+function createInfoWindow(marker) {
+
+    var infowindow = new google.maps.InfoWindow();
     // Check to make sure the infowindow is not already opened on this marker.
     if (infowindow.marker != marker) {
         infowindow.marker = marker;
@@ -138,6 +139,17 @@ function MarkersViewModel() {
         return result;
 
     });
+
+    self.itemIsClicked = function(item) {
+
+        marker = jQuery.grep(self.markers(), function(marker) {
+            return marker.title === item.title;
+        });
+
+        marker = marker[0];
+
+        createInfoWindow(marker);
+    }
 }
 
 
@@ -152,8 +164,9 @@ function getWikipediaArticles(marker) {
     $.ajax({
             url: url,
             dataType: "jsonp",
-            timeout: 3000, /* timeout allows error handling, otherwise with 
-            jsonp the fail function would never be called */
+            timeout: 3000,
+            /* timeout allows error handling, otherwise with 
+                       jsonp the fail function would never be called */
         })
         .done(function(articles) {
             marker.content = formatWikipediaArticles(articles);

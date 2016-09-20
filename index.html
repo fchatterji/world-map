@@ -10,7 +10,7 @@
     <meta id="theme-color" name="theme-color" content="#307699">
     <!-- If IE use the latest rendering engine -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Neighbourhood map</title>
+    <title>World map</title>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- Optional theme -->
@@ -27,11 +27,9 @@
                     Filter:
                     <input data-bind="textInput: filter" />
                 </p>
-                <ul data-bind="foreach: filteredMarkers">
-                    <li>
-                        <p data-bind="text: title"></p>
-                    </li>
-                </ul>
+                <div data-bind="foreach: filteredMarkers" class="btn-group-vertical">
+                        <button class="btn btn-default" data-bind="text: title, event: { click: $parent.itemIsClicked }"></button>
+                </div>
             </div>
             <div class="col-xs-12 col-md-9" id="map">
             </div>
