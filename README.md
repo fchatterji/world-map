@@ -16,6 +16,10 @@ To deploy the web application locally, clone this repository. Then open the file
 
 The website is built using knockout, jquery and bootstrap.
 
+## API
+
+This website uses the [wikipedia API](https://www.mediawiki.org/wiki/API:Main_page).
+
 ## Copyright
 
 This project is part of the udacity full stack web developper nano degree (https://www.udacity.com/course/full-stack-web-developer-nanodegree--nd004). 
