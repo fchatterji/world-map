@@ -2,15 +2,17 @@ var map;
 // Create a new blank array for all the listing markers.
 var markers = [];
 
-// These are the real estate listings that will be shown to the user.
-// Normally we'd have these in a database instead.
+// initialize ko bindings
+ko.applyBindings(new MarkersViewModel());
+
+// These are the locations that will be shown to the user.
 var locations = [
-    { title: 'Park Ave Penthouse', location: { lat: 40.7713024, lng: -73.9632393 } },
-    { title: 'Chelsea Loft', location: { lat: 40.7444883, lng: -73.9949465 } },
-    { title: 'Union Square Open Floor Plan', location: { lat: 40.7347062, lng: -73.9895759 } },
-    { title: 'East Village Hip Studio', location: { lat: 40.7281777, lng: -73.984377 } },
-    { title: 'TriBeCa Artsy Bachelor Pad', location: { lat: 40.7195264, lng: -74.0089934 } },
-    { title: 'Chinatown Homey Space', location: { lat: 40.7180628, lng: -73.9961237 } }
+    { title: 'France', location: { lat: 48.854763, lng: 2.347256 } },
+    { title: 'USA', location: { lat: 38.897208, lng: -77.036515 } },
+    { title: 'Mexico', location: { lat: 19.431165, lng: -99.133518 } },
+    { title: 'Brazil', location: { lat: -15.794854, lng: -47.879021 } },
+    { title: 'Colombia', location: { lat: 4.654406, lng: -74.091543 } },
+    { title: 'Peru', location: { lat: -12.049456, lng: -77.042619 } }
 ];
 
 function initMap() {
@@ -20,6 +22,13 @@ function initMap() {
         zoom: 13,
         mapTypeControl: false
     });
+
+    initMarkers();
+
+}
+
+function initMarkers() {
+    // Initialize all markers and add event listener
 
     var largeInfowindow = new google.maps.InfoWindow();
     var bounds = new google.maps.LatLngBounds();
@@ -36,8 +45,12 @@ function initMap() {
             title: title,
             draggable: true,
             animation: google.maps.Animation.DROP,
-            id: i
+            id: i,
+            content: ""
         });
+        // Get external API data and add it to the marker
+        getWikipediaArticles(marker);
+
         // Push the marker to our array of markers.
         markers.push(marker);
         // Create an onclick event to open an infowindow at each marker.
@@ -51,11 +64,6 @@ function initMap() {
     // Extend the boundaries of the map for each marker
     map.fitBounds(bounds);
 
-    document.getElementById('show-listings').addEventListener('click', showListings);
-    document.getElementById('hide-listings').addEventListener('click', hideListings);
-
-    // initialize ko bindings
-    ko.applyBindings(new MarkersViewModel());
 }
 // This function populates the infowindow when the marker is clicked. We'll only allow
 // one infowindow which will open at the marker that is clicked, and populate based
@@ -64,8 +72,9 @@ function populateInfoWindow(marker, infowindow) {
     // Check to make sure the infowindow is not already opened on this marker.
     if (infowindow.marker != marker) {
         infowindow.marker = marker;
-        infowindow.setContent('<div>' + marker.title + '</div>');
+        infowindow.setContent('<div>' + marker.title + '</div>' + marker.content);
         infowindow.open(map, marker);
+
         // Make sure the marker property is cleared if the infowindow is closed.
         infowindow.addListener('closeclick', function() {
             infowindow.marker = null;
@@ -83,45 +92,35 @@ function toggleBounce(marker) {
     }
 }
 
-// This function will loop through the markers array and display them all.
-function showListings() {
-    console.log("show" + markers)
-    var bounds = new google.maps.LatLngBounds();
-    // Extend the boundaries of the map for each marker and display the marker
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(map);
-        bounds.extend(markers[i].position);
-    }
-    map.fitBounds(bounds);
-}
-// This function will loop through the listings and hide them all.
-function hideListings() {
-    for (var i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-}
 
-
-// Overall viewmodel for this screen, along with initial state
+// Knockout view model
 function MarkersViewModel() {
     var self = this;
 
-    // Array of markers
+    // Array of unfiltered markers
     self.markers = ko.observableArray(markers);
 
     // Filter
     self.filter = ko.observable();
 
-    // Filter array of markers
+    // function to filter the  array of markers
     self.filteredMarkers = ko.computed(function() {
 
         result = [];
         markers = self.markers();
 
+        // if there is no filter, return all the markers and show them on the map
         if (!self.filter()) {
-            return markers;
+            for (i = 0; i < markers.length; i++) {
+                result.push(markers[i])
+                markers[i].setMap(map);
+
+            }
+
+            return result;
         }
 
+        // if there is a filter, filter the markers and show them on the map
         for (i = 0; i < markers.length; i++) {
             title = markers[i].title.toLowerCase();
             filter = self.filter().toLowerCase();
@@ -137,5 +136,50 @@ function MarkersViewModel() {
         return result;
 
     });
+}
 
+
+function getWikipediaArticles(marker) {
+
+    var url = "https://en.wikipedia.org/w/api.php";
+    url += '?' + $.param({
+        'action': 'opensearch',
+        'search': marker.title,
+        'format': 'json',
+    });
+
+    $.ajax({
+            url: url,
+            dataType: "jsonp",
+            timeout: 3000, /* timeout allows error handling, otherwise with 
+            jsonp the fail function would never be called */
+        })
+        .done(function(articles, marker) {
+            marker.content = formatWikipediaArticles(articles);
+        })
+        .fail(function(marker) {
+            marker.content = "The wikipedia data could not be fetched. Please try again later.";
+        })
+
+}
+
+
+
+function formatWikipediaArticles(articles) {
+
+    var formattedArticles = [];
+
+    $.each(articles[1], function(key, val) {
+
+        formattedArticles.push("<li>" +
+            "<a href=\"https://en.wikipedia.org/wiki/" + val + "\">" +
+            val +
+            "</a>" +
+            "</li>");
+
+    });
+
+    formattedArticles = formattedArticles.join("");
+
+    return formattedArticles;
 }

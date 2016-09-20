@@ -1,48 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <meta name="description" content="?eighbourhood map" />
     <meta name="author" content="Florent Chatterji">
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
     <meta name="mobile-web-app-capable" content="yes">
     <meta id="theme-color" name="theme-color" content="#307699">
     <!-- If IE use the latest rendering engine -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Neighbourhood map</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
     <div class="container">
-
-        <div class="options-box">
-            <h1>Find Your New NYC Home</h1>
-            <div>
-                <input id="show-listings" type="button" value="Show Listings">
-                <input id="hide-listings" type="button" value="Hide Listings"></div>
-
-            <p>
-                Filter:
-                <input data-bind="textInput: filter" />
-            </p>
-
-            <ul data-bind="foreach: filteredMarkers">
-                <li>
-                    <p data-bind="text: title"></p>
-                </li>
-            </ul>
+        <h1>Udacity project: neighbourhood map</h1>
+        <div class="row">
+            <div class="col-xs-12 col-md-3 options-box">
+                <p>
+                    Filter:
+                    <input data-bind="textInput: filter" />
+                </p>
+                <ul data-bind="foreach: filteredMarkers">
+                    <li>
+                        <p data-bind="text: title"></p>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-xs-12 col-md-9" id="map">
+            </div>
         </div>
-
-        <div id="map"></div>
     </div>
-
     <script type='text/javascript' src='js/libs/jquery.min.js'></script>
     <script type='text/javascript' src='js/libs/knockout-3.4.0.js'></script>
     <script type='text/javascript' src='js/script.js'></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyACfWkanrp1VeQmflpySvG1u1hduexSVZg&v=3&callback=initMap"></script>
-
 </body>
 
 </html>
+
