@@ -2,8 +2,7 @@ var map;
 // Create a new blank array for all the listing markers.
 var markers = [];
 
-// initialize ko bindings
-ko.applyBindings(new MarkersViewModel());
+
 
 // These are the locations that will be shown to the user.
 var locations = [
@@ -24,6 +23,9 @@ function initMap() {
     });
 
     initMarkers();
+
+    // initialize ko bindings
+    ko.applyBindings(new MarkersViewModel());
 
 }
 
@@ -140,7 +142,6 @@ function MarkersViewModel() {
 
 
 function getWikipediaArticles(marker) {
-
     var url = "https://en.wikipedia.org/w/api.php";
     url += '?' + $.param({
         'action': 'opensearch',
@@ -154,10 +155,10 @@ function getWikipediaArticles(marker) {
             timeout: 3000, /* timeout allows error handling, otherwise with 
             jsonp the fail function would never be called */
         })
-        .done(function(articles, marker) {
+        .done(function(articles) {
             marker.content = formatWikipediaArticles(articles);
         })
-        .fail(function(marker) {
+        .fail(function() {
             marker.content = "The wikipedia data could not be fetched. Please try again later.";
         })
 
