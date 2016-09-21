@@ -1,7 +1,12 @@
+"use strict";
+
 var map;
+
 // Create a new blank array for all the listing markers.
 var markers = [];
 
+// Create a single global infowindow, to have only one infowindow one the map at all times.
+var infowindow;
 
 // These are the locations that will be shown to the user.
 var locations = [
@@ -13,65 +18,76 @@ var locations = [
     { title: 'Peru', location: { lat: -12.049456, lng: -77.042619 } }
 ];
 
+function googleError() {
+    $( ".row" ).html("Sorry, there was a problem when loading google maps. Please try again later.");
+}
+
 function initMap() {
     // Constructor creates a new map - only center and zoom are required.
+
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 40.7413549, lng: -73.9980244 },
         zoom: 13,
         mapTypeControl: false
     });
 
+    initInfoWindow();
     initMarkers();
 
-    // initialize ko bindings
+    // initialize ko bindings after map and markers are initialized.
     ko.applyBindings(new MarkersViewModel());
-
 }
+
+
+function initInfoWindow() {
+    infowindow = new google.maps.InfoWindow();
+}
+
 
 function initMarkers() {
     // Initialize all markers and add event listener
 
-
     var bounds = new google.maps.LatLngBounds();
 
     // The following group uses the location array to create an array of markers on initialize.
-    for (var i = 0; i < locations.length; i++) {
-        // Get the position from the location array.
-        var position = locations[i].location;
-        var title = locations[i].title;
+    locations.forEach(function(location) {
+
+        var position = location.location;
+        var title = location.title;
+
         // Create a marker per location, and put into markers array.
         var marker = new google.maps.Marker({
             map: map,
             position: position,
             title: title,
-            draggable: true,
             animation: google.maps.Animation.DROP,
-            id: i,
             content: ""
         });
+
         // Get external API data and add it to the marker
         getWikipediaArticles(marker);
 
         // Push the marker to our array of markers.
         markers.push(marker);
+
         // Create an onclick event to open an infowindow at each marker.
         marker.addListener('click', function() {
-            creatInfoWindow(this);
+            createInfoWindow(this);
             toggleBounce(this);
         });
-        bounds.extend(markers[i].position);
-    }
 
-    // Extend the boundaries of the map for each marker
+        // Extend the boundaries of the map for each marker
+        bounds.extend(marker.position);
+    });
+
     map.fitBounds(bounds);
 
 }
-// This function populates the infowindow when the marker is clicked. We'll only allow
-// one infowindow which will open at the marker that is clicked, and populate based
-// on that markers position.
-function createInfoWindow(marker) {
 
-    var infowindow = new google.maps.InfoWindow();
+
+function createInfoWindow(marker) {
+    // This function populates the infowindow when the marker is clicked
+
     // Check to make sure the infowindow is not already opened on this marker.
     if (infowindow.marker != marker) {
         infowindow.marker = marker;
@@ -85,71 +101,73 @@ function createInfoWindow(marker) {
     }
 }
 
-// This function makes the marker bounce when it is clicked
+
 function toggleBounce(marker) {
+    // This function makes the marker bounce when it is clicked
     if (marker.getAnimation() !== null) {
         marker.setAnimation(null);
     } else {
         marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(function() { marker.setAnimation(null); }, 500);
+        setTimeout(function() { marker.setAnimation(null); }, 700);
     }
 }
 
 
-// Knockout view model
 function MarkersViewModel() {
+    // Knockout view model
     var self = this;
 
-    // Array of unfiltered markers
     self.markers = ko.observableArray(markers);
 
-    // Filter
-    self.filter = ko.observable();
-
-    // function to filter the  array of markers
+    self.filter = ko.observable("");
+    
     self.filteredMarkers = ko.computed(function() {
+        // Filter the  array of markers
 
-        result = [];
+        var result = [];
         markers = self.markers();
 
         // if there is no filter, return all the markers and show them on the map
-        if (!self.filter()) {
-            for (i = 0; i < markers.length; i++) {
-                result.push(markers[i])
-                markers[i].setMap(map);
+        if (self.filter() === "") {
+            markers.forEach(function(marker) {
+                result.push(marker);
+                marker.setMap(map);
 
-            }
+            });
 
             return result;
         }
 
         // if there is a filter, filter the markers and show them on the map
-        for (i = 0; i < markers.length; i++) {
-            title = markers[i].title.toLowerCase();
-            filter = self.filter().toLowerCase();
+        else {
+            markers.forEach(function(marker) {
 
-            if (title.indexOf(filter) !== -1) {
-                result.push(markers[i])
-                markers[i].setMap(map);
-            } else {
-                markers[i].setMap(null);
-            }
+                var title = marker.title.toLowerCase();
+                var filter = self.filter().toLowerCase();
+
+                if (title.indexOf(filter) !== -1) {
+                    result.push(marker);
+                    marker.setMap(map);
+                } else {
+                    marker.setMap(null);
+                }
+            });
+
+            return result;
         }
-
-        return result;
-
     });
 
     self.itemIsClicked = function(item) {
 
-        marker = jQuery.grep(self.markers(), function(marker) {
+        var marker = jQuery.grep(self.markers(), function(marker) {
             return marker.title === item.title;
         });
 
         marker = marker[0];
 
         createInfoWindow(marker);
-    }
+        toggleBounce(marker);
+    };
 }
 
 
@@ -165,7 +183,7 @@ function getWikipediaArticles(marker) {
             url: url,
             dataType: "jsonp",
             timeout: 3000,
-            /* timeout allows error handling, otherwise with 
+            /* timeout allows error handling, otherwise with
                        jsonp the fail function would never be called */
         })
         .done(function(articles) {
@@ -173,14 +191,12 @@ function getWikipediaArticles(marker) {
         })
         .fail(function() {
             marker.content = "The wikipedia data could not be fetched. Please try again later.";
-        })
+        });
 
 }
 
 
-
 function formatWikipediaArticles(articles) {
-
     var formattedArticles = [];
 
     $.each(articles[1], function(key, val) {
